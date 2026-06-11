@@ -105,7 +105,7 @@ In offline mode the bootstrap still writes a valid key + certificate to `./certs
 
 | Variable | Default | Description |
 |---|---|---|
-| `CF_DOMAIN` | *(required)* | The root domain managed in Cloudflare (e.g. `example.com`) |
+| `CF_DOMAIN` | *(required)* | Your Cloudflare zone apex — just the naked domain, no `https://`, no `*.` wildcard prefix, no trailing slash (e.g. `example.com`) |
 | `CF_API_TOKEN` | *(required)* | Cloudflare API token with Zone:Read, DNS:Edit, SSL and Certificates:Edit |
 | `SERVER_IP` | *(auto-detected)* | Public IP for DNS A records. Detected via `api.ipify.org` if omitted |
 | `MANAGE_APEX` | `false` | Also create/update the apex (`@`) A record |
