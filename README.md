@@ -44,6 +44,12 @@ Use **Zone Resources: Include - All zones** (or restrict to the specific zone).
     Cloudflare API               Origin CA cert
     DNS + SSL mode               (wildcard, ~15yr)
 ```
+<details>
+<summary>What <code>cloudflare-setup</code> does</summary>
+
+Verifies the API token, ensures a wildcard DNS record (`*.domain`), optionally manages the apex record, sets SSL mode to Strict, generates a private key + CSR, and creates or reuses a Cloudflare Origin CA certificate (written to disk as `origin.pem` + `origin.key`).
+</details>
+
 
 - **`cloudflare-setup`** — Idempotent Python bootstrap. Verifies the API token, ensures a wildcard DNS record (`*.domain`), optionally manages the apex record, sets SSL mode to Strict, and creates or reuses a Cloudflare Origin CA certificate covering `domain` and `*.domain`.
 - **`caddy`** — Loads the generated certificate explicitly, serves HTTPS on `443` only (ACME and port-80 redirects disabled), and proxies traffic to containers attached to the `proxy` network.
