@@ -1,2 +1,7 @@
 .agents/
 .claude/
+# Secrets and generated runtime state
+.env
+/certs/
+/data/
+/config/

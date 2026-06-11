@@ -1,0 +1,55 @@
+name: cloudflare-caddy
+
+services:
+  # Runs once on every `up`: brings Cloudflare DNS + SSL mode to the desired
+  # state and writes the origin certificate into ./certs. Idempotent — if
+  # everything is already correct it just logs and exits 0.
+  cloudflare-setup:
+    build:
+      context: ./setup
+    image: cloudflare-caddy-setup:latest
+    env_file: .env
+    environment:
+      CERTS_DIR: /certs
+    volumes:
+      - ./certs:/certs
+    restart: "no"
+
+  caddy:
+    image: caddy:2-alpine
+    # Only start once the certificate + DNS are in place.
+    depends_on:
+      cloudflare-setup:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    # Caddy only needs the domain (for {$CF_DOMAIN} in the Caddyfile); the API
+    # token deliberately stays out of this container.
+    environment:
+      CF_DOMAIN: ${CF_DOMAIN:?set CF_DOMAIN in your .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/etc/caddy/certs:ro
+      - ./data:/data       # Caddy data (kept locally)
+      - ./config:/config   # Caddy autosaved config (kept locally)
+    networks:
+      - proxy
+
+  # Demo backend. Only starts with `docker compose --profile demo up`; the
+  # default `docker compose up` leaves it out. The shipped Caddyfile routes
+  # whoami.<your-domain> here so you can verify the stack end to end.
+  whoami:
+    image: traefik/whoami
+    profiles: ["demo"]
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - proxy
+
+networks:
+  # Fixed name (not project-prefixed) so your app stacks can join it with:
+  #   networks: { proxy: { external: true, name: proxy } }
+  proxy:
+    name: proxy

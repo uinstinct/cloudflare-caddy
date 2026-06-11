@@ -1,0 +1,31 @@
+{
+	# We terminate TLS with the Cloudflare Origin CA certificate written by the
+	# cloudflare-setup service, so Caddy must not try to obtain its own certs.
+	# disable_redirects also means Caddy never needs port 80 — Cloudflare always
+	# reaches the origin on 443 in Full (strict) mode.
+	auto_https disable_redirects
+}
+
+# Reusable TLS snippet: every site imports the origin certificate + key.
+(cf_tls) {
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+}
+
+# --- Demo --------------------------------------------------------------------
+# Works with `docker compose --profile demo up`. Routes
+# https://whoami.<CF_DOMAIN> to the bundled whoami container over the shared
+# `proxy` network. Replace this with your own apps.
+whoami.{$CF_DOMAIN} {
+	import cf_tls
+	reverse_proxy whoami:80
+}
+
+# --- Your apps ---------------------------------------------------------------
+# Copy the block below per app. The upstream is <container-name>:<container-port>
+# on the shared `proxy` network, so apps publish NO host ports of their own.
+# After editing, apply without downtime:  docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+#
+# app1.{$CF_DOMAIN} {
+# 	import cf_tls
+# 	reverse_proxy app1:8080
+# }
