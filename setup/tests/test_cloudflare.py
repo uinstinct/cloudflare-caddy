@@ -32,6 +32,32 @@ def test_verify_token():
 
 
 @respx.mock
+def test_verify_token_falls_back_to_account_scope():
+    # Account-owned tokens are rejected by /user/tokens/verify; the client must
+    # resolve the account and verify there instead.
+    respx.get(f"{API_BASE}/user/tokens/verify").mock(
+        return_value=fail(code=1000, message="Invalid API Token")
+    )
+    respx.get(f"{API_BASE}/accounts").mock(return_value=ok([{"id": "acc1"}]))
+    account_route = respx.get(f"{API_BASE}/accounts/acc1/tokens/verify").mock(
+        return_value=ok({"status": "active"})
+    )
+    assert client().verify_token()["status"] == "active"
+    assert account_route.called
+
+
+@respx.mock
+def test_verify_token_reraises_when_no_account():
+    # A genuinely invalid token with no account to fall back to must still fail.
+    respx.get(f"{API_BASE}/user/tokens/verify").mock(
+        return_value=fail(code=1000, message="Invalid API Token")
+    )
+    respx.get(f"{API_BASE}/accounts").mock(return_value=ok([]))
+    with pytest.raises(CloudflareError, match="1000: Invalid API Token"):
+        client().verify_token()
+
+
+@respx.mock
 def test_get_zone_id():
     respx.get(f"{API_BASE}/zones").mock(return_value=ok([{"id": ZONE}]))
     assert client().get_zone_id("example.com") == ZONE

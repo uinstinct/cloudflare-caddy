@@ -47,7 +47,17 @@ class CloudflareClient:
     # -- account / zone ----------------------------------------------------
 
     def verify_token(self) -> dict[str, Any]:
-        return self._request("GET", "/user/tokens/verify")["result"]
+        # User-owned tokens verify at /user/tokens/verify. Account-owned tokens
+        # are invisible there (Cloudflare returns 1000 "Invalid API Token"), so
+        # fall back to the account-scoped endpoint, resolving the account first.
+        try:
+            return self._request("GET", "/user/tokens/verify")["result"]
+        except CloudflareError:
+            accounts = self._request("GET", "/accounts")["result"]
+            if not accounts:
+                raise
+            account_id = accounts[0]["id"]
+            return self._request("GET", f"/accounts/{account_id}/tokens/verify")["result"]
 
     def get_zone_id(self, name: str) -> str:
         result = self._request("GET", "/zones", params={"name": name})["result"]
