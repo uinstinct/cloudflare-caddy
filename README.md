@@ -29,7 +29,13 @@ Create a single API token at https://dash.cloudflare.com/profile/api-tokens with
 |---|---|
 | Zone:Read | All zones |
 | DNS:Edit | All zones |
+| Zone Settings:Edit | All zones |
 | SSL and Certificates:Edit | All zones |
+
+> `Zone Settings:Edit` is required for the SSL/TLS encryption mode step
+> (`/settings/ssl`); it is a **separate** permission group from
+> `SSL and Certificates:Edit` (which only covers the Origin CA certificate API).
+> Omitting it causes `9109: Unauthorized to access requested resource`.
 
 Use **Zone Resources: Include - All zones** (or restrict to the specific zone).
 
@@ -112,7 +118,7 @@ In offline mode the bootstrap still writes a valid key + certificate to `./certs
 | Variable | Default | Description |
 |---|---|---|
 | `CF_DOMAIN` | *(required)* | Your Cloudflare zone apex — just the naked domain, no `https://`, no `*.` wildcard prefix, no trailing slash (e.g. `example.com`) |
-| `CF_API_TOKEN` | *(required)* | Cloudflare API token with Zone:Read, DNS:Edit, SSL and Certificates:Edit |
+| `CF_API_TOKEN` | *(required)* | Cloudflare API token with Zone:Read, DNS:Edit, Zone Settings:Edit, SSL and Certificates:Edit |
 | `SERVER_IP` | *(auto-detected)* | Public IP for DNS A records. Detected via `api.ipify.org` if omitted |
 | `MANAGE_APEX` | `false` | Also create/update the apex (`@`) A record |
 | `CERT_VALIDITY_DAYS` | `5475` | Origin CA certificate lifetime in days (`7/30/90/365/730/1095/5475`) |
