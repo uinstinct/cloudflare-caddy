@@ -81,40 +81,67 @@ Verifies the API token, ensures a wildcard DNS record (`*.domain`), optionally m
 
 ## Adding a New App
 
-1. Attach the app container to the `proxy` network:
+Every app needs two edits — one in the **app's own** `docker-compose.yml`, one in
+**this repo's** `Caddyfile` — then a reload. The example below exposes a container
+named `myapp` listening on port `8080` at `https://myapp.<your-domain>`. Adjust
+the three highlighted values (`myapp`, `myapp`, `8080`) to match your app.
 
-   ```yaml
-   services:
-     myapp:
-       image: myapp:latest
-       networks:
-         - proxy
+You don't touch Cloudflare or DNS: the wildcard record (`*.domain`) and wildcard
+certificate created at setup already cover every subdomain.
 
-   networks:
-     proxy:
-       external: true
-       name: proxy
-   ```
+### 1. Join the app to the `proxy` network
 
-2. Add a site block to your `Caddyfile` (your local copy of `Caddyfile.example`
-   — run `cp Caddyfile.example Caddyfile` first if you haven't already):
+In your app's **own** `docker-compose.yml` (a separate project from this repo),
+attach the service to the shared `proxy` network. Do **not** publish host ports —
+Caddy reaches the container directly over the network.
 
-   ```caddy
-   myapp.{$CF_DOMAIN} {
-       import cf_tls
-       reverse_proxy myapp:8080
-   }
-   ```
+```yaml
+services:
+  myapp:                 # ← container name, used as the upstream below
+    image: myapp:latest
+    networks:
+      - proxy
+    # no `ports:` — traffic arrives through Caddy, not the host
 
-   `myapp` is the container name and `8080` its internal port; the app publishes
-   no host ports of its own. Keep new blocks here in your local `Caddyfile` —
-   `Caddyfile.example` stays as the pristine template.
+networks:
+  proxy:
+    external: true       # the network is created by this stack, not the app
+    name: proxy
+```
 
-3. Reload Caddy:
+Start it as usual (`docker compose up -d`) so the container is running and on the
+network.
 
-   ```bash
-   docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
-   ```
+### 2. Add a site block to the `Caddyfile`
+
+Edit **this repo's** `Caddyfile` (your local copy of `Caddyfile.example` — run
+`cp Caddyfile.example Caddyfile` first if you haven't already) and add:
+
+```caddy
+myapp.{$CF_DOMAIN} {       # ← the public subdomain
+    import cf_tls          # loads the Origin CA cert (don't change)
+    reverse_proxy myapp:8080   # ← <container-name>:<container-port>
+}
+```
+
+- The subdomain (`myapp`) is whatever you want the app reachable at.
+- `myapp:8080` is the **container name** and its **internal** port from step 1.
+- `import cf_tls` is required so the site serves the Cloudflare Origin CA
+  certificate; copy it verbatim into every block.
+
+Keep your blocks in `Caddyfile` only — `Caddyfile.example` stays as the pristine
+template so `git pull` never conflicts.
+
+### 3. Reload Caddy
+
+Apply the new config with zero downtime (no restart needed):
+
+```bash
+docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+```
+
+Your app is now live at `https://myapp.<your-domain>`. Repeat steps 1–3 for each
+additional app.
 
 ## Offline Mode
 
