@@ -1,6 +1,6 @@
 # Cloudflare Caddy Reverse Proxy
 
-[![CI](https://github.com/reachingforthejack/cloudflare-caddy/actions/workflows/ci.yml/badge.svg)](https://github.com/reachingforthejack/cloudflare-caddy/actions/workflows/ci.yml)
+[![CI](https://github.com/uinstinct/cloudflare-caddy/actions/workflows/ci.yml/badge.svg)](https://github.com/uinstinct/cloudflare-caddy/actions/workflows/ci.yml)
 
 A single-command Docker stack that provisions a Caddy reverse proxy with a Cloudflare Origin CA wildcard certificate, idempotent DNS and SSL management, and a reusable `proxy` network for your app containers.
 
@@ -8,7 +8,7 @@ A single-command Docker stack that provisions a Caddy reverse proxy with a Cloud
 
 ```bash
 # 1. Clone and enter the repo
-git clone https://github.com/reachingforthejack/cloudflare-caddy.git
+git clone https://github.com/uinstinct/cloudflare-caddy.git
 cd cloudflare-caddy
 
 # 2. Configure environment
