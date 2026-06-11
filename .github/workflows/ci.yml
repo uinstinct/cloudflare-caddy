@@ -49,6 +49,9 @@ jobs:
           CF_DOMAIN=example.com
           ENV
 
+      - name: Create the working Caddyfile from the example
+        run: cp Caddyfile.example Caddyfile
+
       - name: Build and start the stack (demo profile)
         run: docker compose --profile demo up -d --build
 

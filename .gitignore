@@ -2,6 +2,8 @@
 .claude/
 # Secrets and generated runtime state
 .env
+# Local working copy — copied from Caddyfile.example, edited per deployment
+/Caddyfile
 /certs/
 /data/
 /config/

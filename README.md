@@ -15,9 +15,17 @@ cd cloudflare-caddy
 cp .env.example .env
 # Edit .env and set CF_DOMAIN and CF_API_TOKEN
 
-# 3. Start everything
+# 3. Create your Caddyfile from the template
+cp Caddyfile.example Caddyfile
+# Edit Caddyfile to add your app site blocks (see "Adding a New App")
+
+# 4. Start everything
 docker compose up -d
 ```
+
+> Both `.env` and `Caddyfile` are gitignored working copies — edit them freely
+> without dirtying the repo or hitting merge conflicts on `git pull`. The tracked
+> templates are `.env.example` and `Caddyfile.example`.
 
 The bootstrap service runs once, provisions DNS and certificates, then Caddy starts and serves traffic on `443`.
 
@@ -88,7 +96,8 @@ Verifies the API token, ensures a wildcard DNS record (`*.domain`), optionally m
        name: proxy
    ```
 
-2. Add a site block to `Caddyfile`:
+2. Add a site block to your `Caddyfile` (your local copy of `Caddyfile.example`
+   — run `cp Caddyfile.example Caddyfile` first if you haven't already):
 
    ```caddy
    myapp.{$CF_DOMAIN} {
@@ -96,6 +105,10 @@ Verifies the API token, ensures a wildcard DNS record (`*.domain`), optionally m
        reverse_proxy myapp:8080
    }
    ```
+
+   `myapp` is the container name and `8080` its internal port; the app publishes
+   no host ports of its own. Keep new blocks here in your local `Caddyfile` —
+   `Caddyfile.example` stays as the pristine template.
 
 3. Reload Caddy:
 
@@ -139,7 +152,8 @@ GitHub Actions runs on every push and PR:
 
 ```
 .
-├── Caddyfile                 # Static Caddy configuration (edit to add sites)
+├── Caddyfile.example         # Caddy config template (tracked)
+├── Caddyfile                 # Your working copy — copied from the example (gitignored)
 ├── docker-compose.yml        # Orchestrates bootstrap + Caddy + demo profile
 ├── .env.example              # Documented environment template
 ├── .github/workflows/ci.yml  # GitHub Actions (unit + integration tests)
